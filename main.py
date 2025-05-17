@@ -4,9 +4,10 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as transforms
 
-# Define batch size and number of epochs
+# Define batch size, number of epochs and learning rate
 batch_size = 4
 num_epochs = 100
+learning_rate = 0.001
 
 # Ensure the training will only happen in CPU.
 device = torch.device('cpu')
@@ -32,7 +33,38 @@ train_loader = torch.utils.data.DataLoader(dataset = train_dataset,
                                            batch_size = batch_size,
                                            shuffle = True)
 
-
 test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
                                            batch_size = batch_size,
                                            shuffle = True)
+
+class ConvNet(nn.Module):
+    def __init__(self):
+        super(ConvNet, self).__init__()
+        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.bn1 = nn.BatchNorm2d(6)
+
+        self.pool = nn.MaxPool2d(2, 2)
+
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.bn2 = nn.BatchNorm2d(16)
+
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.dropout1 = nn.Dropout(0.3)
+
+        self.fc2 = nn.Linear(120, 84)
+        self.dropout2 = nn.Dropout(0.3)
+
+        self.fc3 = nn.Linear(84, 10)
+
+    def forward(self, x):
+        x = self.pool(F.relu(self.bn1(self.conv1(x))))
+        x = self.pool(F.relu(self.bn2(self.conv2(x))))
+        x = x.view(x.size(0), -1)
+        x = self.dropout1(F.relu(self.fc1(x)))
+        x = self.dropout2(F.relu(self.fc2(x)))
+        x = self.fc3(x)
+        return x
+
+model = ConvNet().to(device)
+lossFn = nn.CrossEntropyLoss()
+optimizer = torch.optim.SGD(model.parameters(), learning_rate)
