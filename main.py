@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as transforms
+from train import train
 
 # Define batch size, number of epochs and learning rate
 batch_size = 4
@@ -42,7 +43,6 @@ class ConvNet(nn.Module):
         super(ConvNet, self).__init__()
         self.conv1 = nn.Conv2d(3, 6, 5)
         self.bn1 = nn.BatchNorm2d(6)
-
         self.pool = nn.MaxPool2d(2, 2)
 
         self.conv2 = nn.Conv2d(6, 16, 5)
@@ -59,12 +59,17 @@ class ConvNet(nn.Module):
     def forward(self, x):
         x = self.pool(F.relu(self.bn1(self.conv1(x))))
         x = self.pool(F.relu(self.bn2(self.conv2(x))))
+
         x = x.view(x.size(0), -1)
+
         x = self.dropout1(F.relu(self.fc1(x)))
         x = self.dropout2(F.relu(self.fc2(x)))
         x = self.fc3(x)
         return x
 
 model = ConvNet().to(device)
-lossFn = nn.CrossEntropyLoss()
+
+loss_fn = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(model.parameters(), learning_rate)
+
+train(model, train_loader, loss_fn, optimizer, device, num_epochs)
