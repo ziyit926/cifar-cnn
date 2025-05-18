@@ -4,6 +4,7 @@ import torch.nn.functional as F
 import torchvision
 import torchvision.transforms as transforms
 from train import train
+from test import test
 
 # Define batch size, number of epochs and learning rate
 batch_size = 4
@@ -70,6 +71,8 @@ class ConvNet(nn.Module):
 model = ConvNet().to(device)
 
 loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), learning_rate)
+optimizer = torch.optim.Adam(model.parameters(), learning_rate)
 
 train(model, train_loader, loss_fn, optimizer, device, num_epochs)
+print("Finished Training")
+test(model, test_loader, device)
