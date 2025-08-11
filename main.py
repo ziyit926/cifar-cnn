@@ -101,7 +101,7 @@ loss_fn = nn.CrossEntropyLoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # Define the number of full passes through the training data
-epochs = 20
+epochs = 10
 
 train.model = model
 train.loss_fn = loss_fn

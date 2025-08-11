@@ -38,4 +38,4 @@ def train():
     # Summary of the train
     avg_loss = total_loss / len(train_loader)
     accuracy = total_correct / total_samples * 100
-    print(f"\nTrain accuracy: {accuracy:.4f}% | Avg Loss: {avg_loss:.4f}\n")
+    print(f"\nTrain accuracy: {accuracy:.2f}% | Avg Loss: {avg_loss:.4f}\n")

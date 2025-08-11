@@ -43,4 +43,4 @@ def test():
     accuracy = (total_correct / total_samples) * 100
 
     # Print the results nicely formatted
-    print(f"Test accuracy: {accuracy:.4f}% | Average loss: {average_loss:.4f}\n")
+    print(f"Test accuracy: {accuracy:.2f}% | Average loss: {average_loss:.4f}\n")
