@@ -10,11 +10,11 @@ from test import test
 # Ensure the training will only happen in CPU.
 device = torch.device('cpu')
 
-# Data preprocessing to convert image to tensors and normalise the image data
+# Data preprocessing
 all_transforms = transforms.Compose([transforms.RandomCrop(32, padding=4), # Random crop with padding
                                      transforms.RandomHorizontalFlip(), # Random horizontal flip
-                                     transforms.ToTensor(),
-                                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                                     transforms.ToTensor(), # Convert image to tensors
+                                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)) # Normalise the image data
                                      ])
 
 # Download and create training dataset and testing dataset with above transforms applied
