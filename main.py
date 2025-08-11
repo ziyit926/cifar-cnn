@@ -1,78 +1,119 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
+
 from train import train
 from test import test
-
-# Define batch size, number of epochs and learning rate
-batch_size = 4
-num_epochs = 100
-learning_rate = 0.001
 
 # Ensure the training will only happen in CPU.
 device = torch.device('cpu')
 
-# Use transforms.compose method to reformat images for modeling
+# Data preprocessing to convert image to tensors and normalise the image data
 all_transforms = transforms.Compose([transforms.ToTensor(),
                                      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
                                      ])
-# Create Training dataset
+
+# Download and create training dataset and testing dataset with above transforms applied
 train_dataset = torchvision.datasets.CIFAR10(root = './data',
                                              train = True,
                                              transform = all_transforms,
                                              download = True)
 
-# Create Testing dataset
 test_dataset = torchvision.datasets.CIFAR10(root = './data',
                                             train = False,
                                             transform = all_transforms,
                                             download=True)
 
-# Instantiate loader objects to facilitate processing
+# Number of samples pre batch throw to the model during training and testing
+batch_size = 64
+
+# DataLoader for training data and testing data loads data in batches, shuffles for randomness
 train_loader = torch.utils.data.DataLoader(dataset = train_dataset,
                                            batch_size = batch_size,
                                            shuffle = True)
 
 test_loader = torch.utils.data.DataLoader(dataset = test_dataset,
                                            batch_size = batch_size,
-                                           shuffle = True)
+                                           shuffle = False)
 
+# Printing a batch to find out the input and output tensor sizes for initialising the neural network
+for inputs, labels in test_loader:
+    print(inputs.shape) # 64 (batch size), 3 (RGB color), 32, 32
+    print(labels.shape) # 64 (batch size)
+    break
+
+# Define Convolutional Neural Network model
 class ConvNet(nn.Module):
     def __init__(self):
         super(ConvNet, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)
-        self.bn1 = nn.BatchNorm2d(6)
-        self.pool = nn.MaxPool2d(2, 2)
 
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.bn2 = nn.BatchNorm2d(16)
+        # Create the first conv layer by using the input and output from above
+        self.conv1 = nn.Conv2d(3, 32, 3, padding=1)
+        self.relu1 = nn.ReLU() # Activation function
+        self.pool1 = nn.MaxPool2d(2, 2) # Max pooling halves the spatial size from 32x32 to 16x16
 
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
-        self.dropout1 = nn.Dropout(0.3)
+        # Create second conv with 32 input channels, 64  output filters
+        self.conv2 = nn.Conv2d(32, 64, 3, padding=1)
+        self.relu2 = nn.ReLU()
+        self.pool2 = nn.MaxPool2d(2, 2) # Max pooling halves the spatial size from 16x16 to 8x8
 
-        self.fc2 = nn.Linear(120, 84)
-        self.dropout2 = nn.Dropout(0.3)
+        self.fc1 = nn.Linear(64 * 8 * 8, 512)
+        self.relu3 = nn.ReLU()
 
-        self.fc3 = nn.Linear(84, 10)
+        # Create final fully connected layer outputs 10 values, one for each class
+        self.fc2 = nn.Linear(512, 10)
 
     def forward(self, x):
-        x = self.pool(F.relu(self.bn1(self.conv1(x))))
-        x = self.pool(F.relu(self.bn2(self.conv2(x))))
+        # Applying first conv, activation, and pooling
+        x = self.conv1(x)
+        x = self.relu1(x)
+        x = self.pool1(x)
 
-        x = x.view(x.size(0), -1)
+        # Applying second conv, activation, and pooling
+        x = self.conv2(x)
+        x = self.relu2(x)
+        x = self.pool2(x)
 
-        x = self.dropout1(F.relu(self.fc1(x)))
-        x = self.dropout2(F.relu(self.fc2(x)))
-        x = self.fc3(x)
+        # Flatten the feature maps into vector to throw into fully connected layer
+        x = torch.flatten(x, start_dim=1)
+
+        # Applying fully connected layers and activation
+        x = self.fc1(x)
+        x = self.relu3(x)
+
+        # Applying output layer
+        x = self.fc2(x)
         return x
 
+# Instantiate the model and move it to the device
 model = ConvNet().to(device)
+print(model) # Print model architecture for checking
 
+# Count total number of parameters (weights + biases)
+print(f"Total parameters: {sum(p.numel() for p in model.parameters())}\n")
+
+# Define loss function and optimizer
 loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), learning_rate)
+optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-train(model, train_loader, loss_fn, optimizer, device, num_epochs)
-print("Finished Training")
-test(model, test_loader, device)
+# Define the number of full passes through the training data
+epochs = 20
+
+for i in range(epochs):
+    print(f"Epoch {i+1}")
+    train(train_loader, model, loss_fn, optimizer, device)
+    test(test_loader, model, loss_fn, device)
+
+# Save the trained model weights to a file
+PATH = "./cifar_net.pth"
+torch.save(model.state_dict(), PATH)
+
+# Load the model weights
+model_saved = ConvNet().to(device)
+model_saved.load_state_dict(torch.load(PATH, weights_only=True))
+model_saved.eval()
+
+print("Saved model on test set:")
+test(test_loader, model, loss_fn, device)
