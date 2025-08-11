@@ -1,12 +1,19 @@
-def train(dataloader, model, loss_fn, optimizer, device):
+model = None
+loss_fn = None
+optimizer = None
+device = None
+train_loader = None
 
-    model.train()
+
+def train():
+    global model, loss_fn, optimizer, device, train_loader
+
 
     total_loss = 0 # sum of batch losses
     total_correct = 0 # sum of correct predictions across all samples
-    total_samples = len(dataloader.dataset) # how many examples in the whole dataset
+    total_samples = len(train_loader.dataset) # how many examples in the whole dataset
 
-    for batch_idx, (inputs, labels) in enumerate(dataloader):
+    for batch_idx, (inputs, labels) in enumerate(train_loader):
         # Move batch to the desired device
         inputs, labels = inputs.to(device), labels.to(device)
 
@@ -29,6 +36,6 @@ def train(dataloader, model, loss_fn, optimizer, device):
             print(f"loss: {loss.item():>7f}  [{current:>5d}/{total_samples:>5d}]")
 
     # Summary of the train
-    avg_loss = total_loss / len(dataloader)
+    avg_loss = total_loss / len(train_loader)
     accuracy = total_correct / total_samples * 100
     print(f"\nTrain accuracy: {accuracy:.4f}% | Avg Loss: {avg_loss:.4f}\n")

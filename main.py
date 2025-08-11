@@ -4,8 +4,8 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 
-from train import train
-from test import test
+import train
+import test
 
 # Ensure the training will only happen in CPU.
 device = torch.device('cpu')
@@ -103,10 +103,21 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 # Define the number of full passes through the training data
 epochs = 20
 
-for i in range(epochs):
-    print(f"Epoch {i+1}")
-    train(train_loader, model, loss_fn, optimizer, device)
-    test(test_loader, model, loss_fn, device)
+train.model = model
+train.loss_fn = loss_fn
+train.optimizer = optimizer
+train.device = device
+train.train_loader = train_loader
+
+test.model = model
+test.loss_fn = loss_fn
+test.device = device
+test.test_loader = test_loader
+
+for epoch in range(epochs):
+    print(f"Epoch {epoch+1}")
+    train.train()
+    test.test()
 
 # Save the trained model weights to a file
 PATH = "./cifar_net.pth"
@@ -118,4 +129,4 @@ model_saved.load_state_dict(torch.load(PATH, weights_only=True))
 model_saved.eval()
 
 print("Saved model on test set:")
-test(test_loader, model, loss_fn, device)
+test.test()

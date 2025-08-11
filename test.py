@@ -1,18 +1,24 @@
 import torch
 
-def test(dataloader, model, loss_fn, device):
+model = None
+loss_fn = None
+device = None
+test_loader = None
+
+def test():
+    global model, loss_fn, device, test_loader
 
     model.eval()
 
-    total_samples = len(dataloader.dataset)  # Total number of examples in dataset
-    total_batches = len(dataloader)          # How many batches we will run through
+    total_samples = len(test_loader.dataset)  # Total number of examples in dataset
+    total_batches = len(test_loader)          # How many batches we will run through
 
     total_loss = 0.0     # To add up losses for all batches
     total_correct = 0    # To count all correct predictions
 
     # Turn off gradient calculations to save memory and computations
     with torch.no_grad():
-        for inputs, labels in dataloader:
+        for inputs, labels in test_loader:
             # Move inputs and labels to the right device (CPU or GPU)
             inputs = inputs.to(device)
             labels = labels.to(device)
