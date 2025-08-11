@@ -11,7 +11,9 @@ from test import test
 device = torch.device('cpu')
 
 # Data preprocessing to convert image to tensors and normalise the image data
-all_transforms = transforms.Compose([transforms.ToTensor(),
+all_transforms = transforms.Compose([transforms.RandomCrop(32, padding=4), # Random crop with padding
+                                     transforms.RandomHorizontalFlip(), # Random horizontal flip
+                                     transforms.ToTensor(),
                                      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
                                      ])
 
